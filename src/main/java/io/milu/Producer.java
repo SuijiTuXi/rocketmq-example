@@ -17,7 +17,7 @@ public class Producer {
         JoranConfigurator configurator = new JoranConfigurator();
         configurator.setContext(lc);
         lc.reset();
-        configurator.doConfigure(System.getProperty("user.home") + "/logback.xml");
+        configurator.doConfigure(System.getProperty("user.dir") + "/conf/logback.xml");
 
         //声明并初git始化一个producer
         //需要一个producer group名字作为构造方法的参数，这里为producer1

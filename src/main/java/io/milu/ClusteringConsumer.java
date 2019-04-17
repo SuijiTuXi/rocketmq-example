@@ -20,7 +20,7 @@ public class ClusteringConsumer {
         JoranConfigurator configurator = new JoranConfigurator();
         configurator.setContext(lc);
         lc.reset();
-        configurator.doConfigure(System.getProperty("user.home") + "/logback.xml");
+        configurator.doConfigure(System.getProperty("user.dir") + "/conf/logback.xml");
 
 
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("consumer1");
