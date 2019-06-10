@@ -8,13 +8,11 @@ import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.remoting.common.RemotingHelper;
 import org.slf4j.LoggerFactory;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
-public class ClusteringConsumer {
+public class ClusteringConsumerWithTagCode {
 
     public static void main(String [] argv) throws Exception {
 
@@ -29,23 +27,12 @@ public class ClusteringConsumer {
         consumer.setInstanceName(argv[0]);
         consumer.setNamesrvAddr("127.0.0.1:9876");
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
-        consumer.subscribe("TopicTest", "*");
+        consumer.subscribe("TopicTest", "TagB");
 
         consumer.registerMessageListener(new MessageListenerConcurrently() {
             @Override
             public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
-
-                for (MessageExt msgExt : msgs) {
-                    try {
-                        String str = new String(msgExt.getBody(), RemotingHelper.DEFAULT_CHARSET);
-                        System.out.println("收到消息" + str);
-                    } catch (UnsupportedEncodingException e) {
-                    }
-                }
-
-                //返回消费状态
-                //CONSUME_SUCCESS 消费成功
-                //RECONSUME_LATER 消费失败，需要稍后重新消费
+                System.out.println(argv[0] + "收到消息");
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
             }
         });
@@ -54,4 +41,5 @@ public class ClusteringConsumer {
 
         System.out.println("Consumer Started.");
     }
+
 }
