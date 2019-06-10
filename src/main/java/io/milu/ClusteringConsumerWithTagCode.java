@@ -8,13 +8,11 @@ import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.remoting.common.RemotingHelper;
 import org.slf4j.LoggerFactory;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
-public class ClusteringConsumer {
+public class ClusteringConsumerWithTagCode {
 
     public static void main(String [] argv) throws Exception {
 
@@ -29,15 +27,19 @@ public class ClusteringConsumer {
         consumer.setInstanceName(argv[0]);
         consumer.setNamesrvAddr("127.0.0.1:9876");
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
-        consumer.subscribe("TopicTest", "*");
+        consumer.subscribe("TopicTest", "TagB");
 
-        consumer.registerMessageListener((List<MessageExt> msgs, ConsumeConcurrentlyContext context) -> {
+        consumer.registerMessageListener(new MessageListenerConcurrently() {
+            @Override
+            public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
                 System.out.println(argv[0] + "收到消息");
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+            }
         });
 
         consumer.start();
 
         System.out.println("Consumer Started.");
     }
+
 }

@@ -10,7 +10,7 @@ import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.remoting.common.RemotingHelper;
 import org.slf4j.LoggerFactory;
 
-public class Producer {
+public class ProducerFilter {
     public static void main(String[] args) throws MQClientException, InterruptedException, JoranException {
 
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -29,19 +29,18 @@ public class Producer {
         producer.setSendMsgTimeout(100 * 1000);
         producer.setHeartbeatBrokerInterval(10 * 1000);
 
-        producer.setSendLatencyFaultEnable(true);
-
         //调用start()方法启动一个producer实例
         producer.start();
 
         //发送10条消息到Topic为TopicTest，tag为TagA，消息内容为“Hello RocketMQ”拼接上i的值
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 5; i++) {
             try {
                 Message msg = new Message(
-                    "TopicTest",// topic
-                    "",// tag
-                    ("Hello RocketMQ " + i).getBytes(RemotingHelper.DEFAULT_CHARSET)// body
+                        "TopicTest",// topic
+                        "",// tag
+                        ("Hello RocketMQ " + i).getBytes(RemotingHelper.DEFAULT_CHARSET)// body
                 );
+                msg.putUserProperty("text", "hello1");
 
                 //调用producer的send()方法发送消息
                 //这里调用的是同步的方式，所以会有返回结果
