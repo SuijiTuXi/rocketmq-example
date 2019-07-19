@@ -12,37 +12,34 @@ import java.util.List;
 public class OrderlyProducer {
 
     public static void main(String[] args) throws Exception {
-
-        DefaultMQProducer producer = new DefaultMQProducer("producer1");
-
+        DefaultMQProducer producer = new DefaultMQProducer("producer");
         producer.setNamesrvAddr("127.0.0.1:9876");
-
-        //调用start()方法启动一个producer实例
         producer.start();
 
-        for (int i = 0; i < 10; i++) {
-            try {
-                Message msg = new Message(
-                    "OrderlyTest",// topic
-                    "",// tag
-                    ("Orderly Message " + i).getBytes(RemotingHelper.DEFAULT_CHARSET)// body
-                );
+        MessageQueueSelector selector = new OrderlyMessageQueueSelector();
 
-                SendResult sendResult = producer.send(msg, new OrderlyMessageQueueSelector(), null);
+        Message msg1 = new Message(
+            "OrderlyTest",// topic
+            ("Orderly Message 1").getBytes(RemotingHelper.DEFAULT_CHARSET)// body
+        );
+        producer.send(msg1, selector, 1);
 
-                System.out.println(sendResult);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+        Message msg2 = new Message(
+            "OrderlyTest",// topic
+            ("Orderly Message 2").getBytes(RemotingHelper.DEFAULT_CHARSET)// body
+        );
+        producer.send(msg2, selector, 1);
 
         producer.shutdown();
     }
 
     static class OrderlyMessageQueueSelector implements MessageQueueSelector {
+        // mqs 表示这个 topic 下所有队列
         @Override
         public MessageQueue select(List<MessageQueue> mqs, Message msg, Object arg) {
-            return mqs.get(0);
+            Integer id = (Integer) arg;
+            int index = id % mqs.size();
+            return mqs.get(index);
         }
     }
 }

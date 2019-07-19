@@ -2,11 +2,7 @@ package io.milu;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
-import ch.qos.logback.core.joran.spi.JoranException;
-import io.milu.transaction.TransactionCheckListenerImpl;
-import io.milu.transaction.TransactionExecuterimpl;
 import io.milu.transaction.TransactionListenerImpl;
-import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.TransactionMQProducer;
 import org.apache.rocketmq.common.message.Message;
@@ -14,7 +10,7 @@ import org.apache.rocketmq.remoting.common.RemotingHelper;
 import org.slf4j.LoggerFactory;
 
 public class TransactionProducer {
-    public static void main(String[] args) throws MQClientException, InterruptedException, JoranException {
+    public static void main(String[] args) throws Exception {
 
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         JoranConfigurator configurator = new JoranConfigurator();
@@ -22,13 +18,7 @@ public class TransactionProducer {
         lc.reset();
         configurator.doConfigure(System.getProperty("user.dir") + "/conf/logback.xml");
 
-        //声明并初git始化一个producer
-        //需要一个producer group名字作为构造方法的参数，这里为producer1
-        TransactionMQProducer producer = new TransactionMQProducer ("producer1");
-
-        TransactionCheckListenerImpl checkListener = new TransactionCheckListenerImpl();
-        producer.setTransactionCheckListener(checkListener);
-
+        TransactionMQProducer producer = new TransactionMQProducer("producer1");
         producer.setTransactionListener(new TransactionListenerImpl());
 
         //设置NameServer地址,此处应改为实际NameServer地址，多个地址之间用；分隔
@@ -40,30 +30,24 @@ public class TransactionProducer {
         //调用start()方法启动一个producer实例
         producer.start();
 
-        //发送10条消息到Topic为TopicTest，tag为TagA，消息内容为“Hello RocketMQ”拼接上i的值
-        for (int i = 0; i < 5; i++) {
+        try {
+            Message msg = new Message(
+            "TransactionTest",// topic
+            "TagA",// tag
+                ("RocketMQ Transaction").getBytes(RemotingHelper.DEFAULT_CHARSET) // body
+            );
 
-            TransactionExecuterimpl executer = new TransactionExecuterimpl();
+            producer.sendMessageInTransaction(msg, null);
 
-            try {
-                Message msg = new Message(
-                        "TopicTest",// topic
-                        "TagA",// tag
-                        ("Hello RocketMQ " + i).getBytes(RemotingHelper.DEFAULT_CHARSET)// body
-                );
+            //调用producer的send()方法发送消息
+            //这里调用的是同步的方式，所以会有返回结果
+            //SendResult sendResult = producer.send(msg);
 
-                producer.sendMessageInTransaction(msg, executer, null);
-
-                //调用producer的send()方法发送消息
-                //这里调用的是同步的方式，所以会有返回结果
-                SendResult sendResult = producer.send(msg);
-
-                //打印返回结果，可以看到消息发送的状态以及一些相关信息
-                System.out.println(sendResult);
-            } catch (Exception e) {
-                e.printStackTrace();
-                Thread.sleep(1000);
-            }
+            //打印返回结果，可以看到消息发送的状态以及一些相关信息
+            //System.out.println(sendResult);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Thread.sleep(1000);
         }
 
         //发送完消息之后，调用shutdown()方法关闭producer

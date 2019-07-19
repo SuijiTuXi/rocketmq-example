@@ -14,15 +14,15 @@ import java.util.List;
 public class OrderlyConsumer {
     public static void main(String[] args) throws Exception {
 
-        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("consumer1");
+        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("consumer_order");
         consumer.setNamesrvAddr("127.0.0.1:9876");
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
         consumer.subscribe("OrderlyTest", "*");
+        consumer.setMaxReconsumeTimes(1);
 
         consumer.registerMessageListener(new MessageListenerOrderly() {
             @Override
             public ConsumeOrderlyStatus consumeMessage(List<MessageExt> msgs, ConsumeOrderlyContext context) {
-
                 for (MessageExt msgExt : msgs) {
                     try {
                         String str = new String(msgExt.getBody(), RemotingHelper.DEFAULT_CHARSET);
@@ -30,7 +30,7 @@ public class OrderlyConsumer {
                     } catch (UnsupportedEncodingException e) {
                     }
                 }
-                return ConsumeOrderlyStatus.SUCCESS;
+                return ConsumeOrderlyStatus.SUSPEND_CURRENT_QUEUE_A_MOMENT;
             }
         });
 
